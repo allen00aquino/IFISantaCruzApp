@@ -191,7 +191,7 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#ffffff' },
+  root: { flex: 1, backgroundColor: '#14234a', overflow: 'hidden' },
   webRoot: {
     flex: 1,
     width: '100%',
@@ -199,13 +199,16 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     backgroundColor: '#14234a',
   },
-  fill: { flex: 1, position: 'relative', overflow: 'hidden', backgroundColor: '#14234a' },
+  fill: {
+    flex: 1,
+    width: '100%',
+    alignSelf: 'stretch',
+    position: 'relative',
+    overflow: 'hidden',
+    backgroundColor: '#14234a',
+  },
   backgroundImage: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
+    ...StyleSheet.absoluteFillObject,
     width: '100%',
     height: '100%',
     zIndex: 0,
@@ -215,7 +218,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 10,
     elevation: 10,
-    backgroundColor: '#14234a',
+    backgroundColor: 'transparent',
   },
   tint: {
     ...StyleSheet.absoluteFillObject,
@@ -224,6 +227,7 @@ const styles = StyleSheet.create({
   },
   centerContent: {
     flex: 1,
+    width: '100%',
     zIndex: 2,
     alignItems: 'center',
     justifyContent: 'center',
