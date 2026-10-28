@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 10,
     elevation: 10,
-    backgroundColor: 'transparent',
+    backgroundColor: '#14234a',
   },
   tint: {
     ...StyleSheet.absoluteFillObject,
