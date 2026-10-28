@@ -158,7 +158,13 @@ export default function App() {
             pointerEvents={error ? 'auto' : 'none'}
           >
             <BrandedBackground>
-              <Image source={LOGO} style={styles.logo} resizeMode="contain" />
+              <Image
+                source={LOGO}
+                style={styles.logo}
+                resizeMode="contain"
+                onLoad={() => console.log('[IFI splash] Native logo loaded')}
+                onError={(event) => console.warn('[IFI splash] Native logo failed:', event.nativeEvent)}
+              />
               <Text style={styles.name}>{APP_NAME}</Text>
               <Text style={styles.tagline}>{TAGLINE}</Text>
 
