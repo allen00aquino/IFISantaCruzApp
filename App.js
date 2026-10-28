@@ -6,7 +6,6 @@ import {
   View,
   Text,
   Image,
-  ImageBackground,
   TouchableOpacity,
   Linking,
   ActivityIndicator,
@@ -32,15 +31,16 @@ const LOGO_W = Math.round(LOGO_H * (336 / 419));
 
 function BrandedBackground({ children }) {
   return (
-    <ImageBackground
-      source={BG}
-      style={styles.fill}
-      imageStyle={styles.backgroundImage}
-      resizeMode="cover"
-    >
+    <View style={styles.fill}>
+      <Image
+        source={BG}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+        fadeDuration={0}
+      />
       <View style={styles.tint} />
       <View style={styles.centerContent}>{children}</View>
-    </ImageBackground>
+    </View>
   );
 }
 
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#14234a',
   },
   fill: { flex: 1 },
-  backgroundImage: { width: '100%', height: '100%' },
+  backgroundImage: { ...StyleSheet.absoluteFillObject, width: undefined, height: undefined },
   webview: { flex: 1, backgroundColor: '#ffffff' },
   overlay: {
     ...StyleSheet.absoluteFillObject,
