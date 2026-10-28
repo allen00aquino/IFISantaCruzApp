@@ -4,13 +4,8 @@
     "slug": "IFISantaCruzApp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo-transparent.png",
-    "userInterfaceStyle": "dark",
-    "splash": {
-      "image": "./assets/logo-transparent.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#000000"
-    },
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.fongelfalco.IFISantaCruzApp",
@@ -20,8 +15,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#000000",
-        "foregroundImage": "./assets/logo-transparent.png"
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/android-icon-foreground.png"
       }
     },
     "web": {
@@ -33,7 +28,14 @@
       }
     },
     "plugins": [
-      "expo-splash-screen"
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "backgroundColor": "#ffffff",
+          "imageWidth": 200
+        }
+      ]
     ]
   }
 }

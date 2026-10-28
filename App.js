@@ -1,7 +1,15 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
-  StyleSheet, StatusBar, Platform, View, Text, TouchableOpacity,
-  Linking, ActivityIndicator, Image, ImageBackground,
+  StyleSheet,
+  StatusBar,
+  Platform,
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  Linking,
+  ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
@@ -10,25 +18,113 @@ import * as SplashScreen from 'expo-splash-screen';
 SplashScreen.preventAutoHideAsync();
 
 const TARGET_URL = 'https://ifisantacruz.com/';
+const APP_NAME = 'IFI Santa Cruz';
+const TAGLINE = 'Katedral ng Birhen Maria Maulawin';
+
+const MIN_LOADING_MS = 1000; // pinakamaikling oras na makikita ang loading screen
+const FADE_MS = 350;
+const TIMEOUT_MS = 20000; // kapag lumampas, ituturing na error
+const SITE_HOST = /^https?:\/\/([^/]+\.)?ifisantacruz\.com/i;
+
+const BG = require('./assets/loading-bg.jpg');
+const LOGO = require('./assets/logo.png');
+
+// Parehong laki ng logo sa splash (200 na lapad ng imahe, 80% ang taas ng logo)
+const LOGO_H = 160;
+const LOGO_W = Math.round(LOGO_H * (336 / 419));
+
+function BrandedBackground({ children, onReady }) {
+  return (
+    <View style={styles.fill}>
+      <Image
+        source={BG}
+        style={StyleSheet.absoluteFillObject}
+        resizeMode="cover"
+        fadeDuration={0}
+        onLoad={onReady}
+        onError={onReady}
+      />
+      <View style={styles.tint} />
+      <View style={styles.centerContent}>{children}</View>
+    </View>
+  );
+}
 
 export default function App() {
   const webRef = useRef(null);
-  const [loading, setLoading] = useState(true);
+  const startedAt = useRef(Date.now());
+  const timeoutRef = useRef(null);
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  const [overlayVisible, setOverlayVisible] = useState(true);
   const [error, setError] = useState(false);
 
-  const hideSplash = useCallback(() => {
-    SplashScreen.hideAsync();
+  const hideNativeSplash = useCallback(() => {
+    SplashScreen.hideAsync().catch(() => {});
   }, []);
+
+  const clearTimer = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  };
+
+  const startTimer = useCallback(() => {
+    clearTimer();
+    timeoutRef.current = setTimeout(() => setError(true), TIMEOUT_MS);
+  }, []);
+
+  useEffect(() => {
+    startTimer();
+    return clearTimer;
+  }, [startTimer]);
+
+  // Safety: kahit hindi pa nakakarga ang larawan, itago ang native splash pagkalipas ng 3 segundo
+  useEffect(() => {
+    const t = setTimeout(hideNativeSplash, 3000);
+    return () => clearTimeout(t);
+  }, [hideNativeSplash]);
+
+  const handleLoaded = () => {
+    clearTimer();
+    setError(false);
+    const wait = Math.max(0, MIN_LOADING_MS - (Date.now() - startedAt.current));
+    setTimeout(() => {
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: FADE_MS,
+        useNativeDriver: true,
+      }).start(() => setOverlayVisible(false));
+    }, wait);
+  };
+
+  const handleError = () => {
+    clearTimer();
+    setError(true);
+  };
 
   const retry = () => {
     setError(false);
-    setLoading(true);
+    setOverlayVisible(true);
+    opacity.setValue(1);
+    startedAt.current = Date.now();
+    startTimer();
     webRef.current?.reload();
+  };
+
+  // tel:, mailto:, Facebook, at iba pang site ay magbubukas sa labas ng app
+  const onShouldStartLoad = (req) => {
+    const url = req.url || '';
+    if (url === 'about:blank' || SITE_HOST.test(url)) return true;
+    if (req.isTopFrame === false) return true; // iframes, embeds
+    Linking.openURL(url).catch(() => {});
+    return false;
   };
 
   if (Platform.OS === 'web') {
     return (
-      <View style={styles.center}>
+      <View style={styles.webFallback}>
         <Text style={styles.title}>IFI Santa Cruz Web Portal</Text>
         <TouchableOpacity style={styles.button} onPress={() => Linking.openURL(TARGET_URL)}>
           <Text style={styles.buttonText}>Open ifisantacruz.com</Text>
@@ -37,12 +133,14 @@ export default function App() {
     );
   }
 
-  return (
-    <SafeAreaProvider onLayout={hideSplash}>
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#000000" />
+  const darkBackdrop = overlayVisible || error;
 
-        {!error && (
+  return (
+    <SafeAreaProvider>
+      <View style={styles.root}>
+        <StatusBar barStyle={darkBackdrop ? 'light-content' : 'dark-content'} />
+
+        <SafeAreaView style={styles.fill}>
           <WebView
             ref={webRef}
             source={{ uri: TARGET_URL }}
@@ -51,97 +149,100 @@ export default function App() {
             domStorageEnabled
             pullToRefreshEnabled
             allowsBackForwardNavigationGestures
-            onLoadStart={() => setLoading(true)}
-            onLoadEnd={() => setLoading(false)}
-            onError={() => { setLoading(false); setError(true); }}
-            onHttpError={() => { setLoading(false); setError(true); }}
+            onLoad={handleLoaded}
+            onError={handleError}
+            onHttpError={handleError}
+            onShouldStartLoadWithRequest={onShouldStartLoad}
           />
-        )}
+        </SafeAreaView>
 
-        {loading && !error && (
-          <View style={styles.overlay}>
-            <ImageBackground
-              source={require('./assets/church-bg.jpg')}
-              style={styles.bgImage}
-              blurRadius={10}
-              resizeMode="cover"
-            >
-              <View style={styles.darkDarkOverlay}>
-                <Image
-                  source={require('./assets/logo-transparent.png')}
-                  style={styles.logo}
-                />
-                
-                <Text style={styles.appTitle}>IFI Santa Cruz App</Text>
-                
-                <Text style={styles.subtext}>
-                  Welcome to the Cathedral & Shrine of Our Lady of Maulawin
-                </Text>
+        {overlayVisible && (
+          <Animated.View
+            style={[styles.overlay, { opacity }]}
+            pointerEvents={error ? 'auto' : 'none'}
+          >
+            <BrandedBackground onReady={hideNativeSplash}>
+              <Image source={LOGO} style={styles.logo} resizeMode="contain" />
+              <Text style={styles.name}>{APP_NAME}</Text>
+              <Text style={styles.tagline}>{TAGLINE}</Text>
 
-                <ActivityIndicator size="large" color="#ffffff" style={{ marginTop: 25 }} />
-              </View>
-            </ImageBackground>
-          </View>
+              {!error ? (
+                <ActivityIndicator size="large" color="#ffffff" style={styles.spinner} />
+              ) : (
+                <View style={styles.card}>
+                  <Text style={styles.cardTitle}>Hindi ma-load ang page</Text>
+                  <Text style={styles.cardText}>Tingnan ang internet connection mo.</Text>
+                  <TouchableOpacity style={styles.button} onPress={retry}>
+                    <Text style={styles.buttonText}>Subukan ulit</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </BrandedBackground>
+          </Animated.View>
         )}
-
-        {error && (
-          <View style={styles.center}>
-            <Text style={styles.title}>Hindi ma-load ang page</Text>
-            <Text style={styles.subtextError}>Tingnan ang internet connection mo.</Text>
-            <TouchableOpacity style={styles.button} onPress={retry}>
-              <Text style={styles.buttonText}>Subukan ulit</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </SafeAreaView>
+      </View>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
+  root: { flex: 1, backgroundColor: '#ffffff' },
+  fill: { flex: 1 },
   webview: { flex: 1, backgroundColor: '#ffffff' },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  bgImage: {
+  overlay: { ...StyleSheet.absoluteFillObject },
+  tint: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(14,28,66,0.40)' },
+  centerContent: {
     flex: 1,
-    width: '100%',
-    height: '100%',
-  },
-  darkDarkOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 25,
+    paddingHorizontal: 28,
   },
   logo: {
-    width: 120,
-    height: 120,
-    resizeMode: 'contain',
-    marginBottom: 20,
+    width: LOGO_W,
+    height: LOGO_H,
+    shadowColor: '#000',
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
   },
-  appTitle: {
-    fontSize: 26,
-    fontWeight: 'bold',
+  name: {
+    marginTop: 18,
+    fontSize: 24,
+    fontWeight: '700',
     color: '#ffffff',
     textAlign: 'center',
-    marginBottom: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
-  subtext: {
+  tagline: {
+    marginTop: 6,
     fontSize: 14,
-    color: '#e0e0e0',
+    color: '#e8ecf7',
     textAlign: 'center',
-    lineHeight: 20,
-    maxWidth: '85%',
   },
-  subtextError: { fontSize: 14, color: '#666', marginTop: 10, marginBottom: 20, textAlign: 'center' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: '#ffffff' },
-  title: { fontSize: 20, fontWeight: 'bold', color: '#333', marginBottom: 8 },
-  button: { backgroundColor: '#007AFF', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 8 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  spinner: { marginTop: 28 },
+  card: {
+    marginTop: 28,
+    width: '100%',
+    maxWidth: 320,
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    padding: 20,
+    alignItems: 'center',
+  },
+  cardTitle: { fontSize: 17, fontWeight: '700', color: '#1d2433', marginBottom: 6 },
+  cardText: { fontSize: 14, color: '#5d6577', marginBottom: 16, textAlign: 'center' },
+  button: {
+    backgroundColor: '#1f3b7a',
+    paddingVertical: 12,
+    paddingHorizontal: 26,
+    borderRadius: 9,
+  },
+  buttonText: { color: '#ffffff', fontSize: 16, fontWeight: '600' },
+  title: { fontSize: 20, fontWeight: 'bold', color: '#333', marginBottom: 16 },
+  webFallback: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: '#ffffff',
+  },
 });
