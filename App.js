@@ -47,6 +47,9 @@ function BrandedBackground({ children }) {
 }
 
 export default function App() {
+  useEffect(() => {
+    console.log('[IFI splash] BUILD CHECK: background-fix-2026-10-29');
+  }, []);
   const webRef = useRef(null);
   const startedAt = useRef(Date.now());
   const timeoutRef = useRef(null);
