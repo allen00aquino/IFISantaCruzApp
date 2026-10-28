@@ -6,6 +6,7 @@ import {
   View,
   Text,
   Image,
+  ImageBackground,
   TouchableOpacity,
   Linking,
   ActivityIndicator,
@@ -13,40 +14,33 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
-import * as SplashScreen from 'expo-splash-screen';
-
-SplashScreen.preventAutoHideAsync();
 
 const TARGET_URL = 'https://ifisantacruz.com/';
 const APP_NAME = 'IFI Santa Cruz';
 const TAGLINE = 'Katedral ng Birhen Maria Maulawin';
 
-const MIN_LOADING_MS = 1800; // panatilihing nakikita ang branded loading screen nang hindi bababa sa 1.8 segundo
+const MIN_LOADING_MS = 1800;
 const FADE_MS = 350;
-const TIMEOUT_MS = 20000; // kapag lumampas, ituturing na error
+const TIMEOUT_MS = 20000;
 const SITE_HOST = /^https?:\/\/([^/]+\.)?ifisantacruz\.com/i;
 
 const BG = require('./assets/loading-bg.jpg');
 const LOGO = require('./assets/logo.png');
 
-// Parehong laki ng logo sa splash (200 na lapad ng imahe, 80% ang taas ng logo)
 const LOGO_H = 160;
 const LOGO_W = Math.round(LOGO_H * (336 / 419));
 
-function BrandedBackground({ children, onReady }) {
+function BrandedBackground({ children }) {
   return (
-    <View style={styles.fill}>
-      <Image
-        source={BG}
-        style={StyleSheet.absoluteFillObject}
-        resizeMode="cover"
-        fadeDuration={0}
-        onLoad={onReady}
-        onError={onReady}
-      />
+    <ImageBackground
+      source={BG}
+      style={styles.fill}
+      imageStyle={styles.backgroundImage}
+      resizeMode="cover"
+    >
       <View style={styles.tint} />
       <View style={styles.centerContent}>{children}</View>
-    </View>
+    </ImageBackground>
   );
 }
 
@@ -59,43 +53,30 @@ export default function App() {
   const [overlayVisible, setOverlayVisible] = useState(true);
   const [error, setError] = useState(false);
 
-  const hideNativeSplash = useCallback(() => {
-    SplashScreen.hideAsync().catch(() => {});
-  }, []);
-
-  const clearTimer = () => {
+  const clearTimer = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-  };
+  }, []);
 
   const startTimer = useCallback(() => {
     clearTimer();
     timeoutRef.current = setTimeout(() => setError(true), TIMEOUT_MS);
-  }, []);
+  }, [clearTimer]);
 
   useEffect(() => {
     startTimer();
     return clearTimer;
-  }, [startTimer]);
+  }, [startTimer, clearTimer]);
 
-  // Sa web/dev mode, gamitin muna ang branded loading screen bago pumunta sa live site.
   useEffect(() => {
     if (Platform.OS !== 'web') return;
-
     const timer = setTimeout(() => {
       window.location.replace(TARGET_URL);
     }, MIN_LOADING_MS + FADE_MS);
-
     return () => clearTimeout(timer);
   }, []);
-
-  // Safety: kahit hindi pa nakakarga ang larawan, itago ang native splash pagkalipas ng 3 segundo
-  useEffect(() => {
-    const t = setTimeout(hideNativeSplash, 3000);
-    return () => clearTimeout(t);
-  }, [hideNativeSplash]);
 
   const handleLoaded = () => {
     clearTimer();
@@ -124,11 +105,10 @@ export default function App() {
     webRef.current?.reload();
   };
 
-  // tel:, mailto:, Facebook, at iba pang site ay magbubukas sa labas ng app
   const onShouldStartLoad = (req) => {
     const url = req.url || '';
     if (url === 'about:blank' || SITE_HOST.test(url)) return true;
-    if (req.isTopFrame === false) return true; // iframes, embeds
+    if (req.isTopFrame === false) return true;
     Linking.openURL(url).catch(() => {});
     return false;
   };
@@ -137,7 +117,7 @@ export default function App() {
     return (
       <View style={styles.webRoot}>
         <StatusBar barStyle="light-content" />
-        <BrandedBackground onReady={hideNativeSplash}>
+        <BrandedBackground>
           <Image source={LOGO} style={styles.logo} resizeMode="contain" />
           <Text style={styles.name}>{APP_NAME}</Text>
           <Text style={styles.tagline}>{TAGLINE}</Text>
@@ -175,7 +155,7 @@ export default function App() {
             style={[styles.overlay, { opacity }]}
             pointerEvents={error ? 'auto' : 'none'}
           >
-            <BrandedBackground onReady={hideNativeSplash}>
+            <BrandedBackground>
               <Image source={LOGO} style={styles.logo} resizeMode="contain" />
               <Text style={styles.name}>{APP_NAME}</Text>
               <Text style={styles.tagline}>{TAGLINE}</Text>
@@ -203,12 +183,13 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#ffffff' },
   webRoot: {
     flex: 1,
-    width: '100vw',
-    minHeight: '100vh',
+    width: '100%',
+    minHeight: '100%',
     alignSelf: 'stretch',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#14234a',
   },
   fill: { flex: 1 },
+  backgroundImage: { width: '100%', height: '100%' },
   webview: { flex: 1, backgroundColor: '#ffffff' },
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -216,7 +197,10 @@ const styles = StyleSheet.create({
     elevation: 10,
     backgroundColor: '#14234a',
   },
-  tint: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(14,28,66,0.40)' },
+  tint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(14,28,66,0.28)',
+  },
   centerContent: {
     flex: 1,
     alignItems: 'center',
