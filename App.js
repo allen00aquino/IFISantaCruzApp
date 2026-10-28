@@ -197,6 +197,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#14234a',
   },
   fill: { flex: 1, position: 'relative', overflow: 'hidden', backgroundColor: '#14234a' },
+  backgroundImage: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    zIndex: 0,
+  },
   webview: { flex: 1, backgroundColor: '#ffffff' },
   overlay: {
     ...StyleSheet.absoluteFillObject,
