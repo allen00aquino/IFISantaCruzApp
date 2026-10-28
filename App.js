@@ -34,7 +34,7 @@ function BrandedBackground({ children }) {
     <View style={styles.fill}>
       <Image
         source={BG}
-        style={styles.backgroundImage}
+        style={StyleSheet.absoluteFillObject}
         resizeMode="cover"
         fadeDuration={0}
       />
@@ -188,8 +188,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     backgroundColor: '#14234a',
   },
-  fill: { flex: 1 },
-  backgroundImage: { ...StyleSheet.absoluteFillObject, width: undefined, height: undefined },
+  fill: { flex: 1, position: 'relative', overflow: 'hidden', backgroundColor: '#14234a' },
   webview: { flex: 1, backgroundColor: '#ffffff' },
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -199,10 +198,12 @@ const styles = StyleSheet.create({
   },
   tint: {
     ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
     backgroundColor: 'rgba(14,28,66,0.28)',
   },
   centerContent: {
     flex: 1,
+    zIndex: 2,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 28,
