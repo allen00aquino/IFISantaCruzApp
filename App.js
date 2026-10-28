@@ -34,9 +34,11 @@ function BrandedBackground({ children }) {
     <View style={styles.fill}>
       <Image
         source={BG}
-        style={StyleSheet.absoluteFillObject}
+        style={styles.backgroundImage}
         resizeMode="cover"
         fadeDuration={0}
+        onLoad={() => console.log('[IFI splash] Background image loaded')}
+        onError={(event) => console.warn('[IFI splash] Background image failed:', event.nativeEvent)}
       />
       <View style={styles.tint} />
       <View style={styles.centerContent}>{children}</View>
@@ -118,7 +120,7 @@ export default function App() {
       <View style={styles.webRoot}>
         <StatusBar barStyle="light-content" />
         <BrandedBackground>
-          <Image source={LOGO} style={styles.logo} resizeMode="contain" />
+          <Image source={LOGO} style={styles.logo} resizeMode="contain" onLoad={() => console.log('[IFI splash] Logo loaded')} onError={(event) => console.warn('[IFI splash] Logo failed:', event.nativeEvent)} />
           <Text style={styles.name}>{APP_NAME}</Text>
           <Text style={styles.tagline}>{TAGLINE}</Text>
           <ActivityIndicator size="large" color="#ffffff" style={styles.spinner} />
