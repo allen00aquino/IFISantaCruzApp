@@ -80,6 +80,17 @@ export default function App() {
     return clearTimer;
   }, [startTimer]);
 
+  // Sa web/dev mode, gamitin muna ang branded loading screen bago pumunta sa live site.
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    const timer = setTimeout(() => {
+      window.location.replace(TARGET_URL);
+    }, MIN_LOADING_MS + FADE_MS);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   // Safety: kahit hindi pa nakakarga ang larawan, itago ang native splash pagkalipas ng 3 segundo
   useEffect(() => {
     const t = setTimeout(hideNativeSplash, 3000);
@@ -124,11 +135,14 @@ export default function App() {
 
   if (Platform.OS === 'web') {
     return (
-      <View style={styles.webFallback}>
-        <Text style={styles.title}>IFI Santa Cruz Web Portal</Text>
-        <TouchableOpacity style={styles.button} onPress={() => Linking.openURL(TARGET_URL)}>
-          <Text style={styles.buttonText}>Open ifisantacruz.com</Text>
-        </TouchableOpacity>
+      <View style={styles.root}>
+        <StatusBar barStyle="light-content" />
+        <BrandedBackground onReady={hideNativeSplash}>
+          <Image source={LOGO} style={styles.logo} resizeMode="contain" />
+          <Text style={styles.name}>{APP_NAME}</Text>
+          <Text style={styles.tagline}>{TAGLINE}</Text>
+          <ActivityIndicator size="large" color="#ffffff" style={styles.spinner} />
+        </BrandedBackground>
       </View>
     );
   }
@@ -237,12 +251,4 @@ const styles = StyleSheet.create({
     borderRadius: 9,
   },
   buttonText: { color: '#ffffff', fontSize: 16, fontWeight: '600' },
-  title: { fontSize: 20, fontWeight: 'bold', color: '#333', marginBottom: 16 },
-  webFallback: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#ffffff',
-  },
 });
