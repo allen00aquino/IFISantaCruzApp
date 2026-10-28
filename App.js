@@ -135,7 +135,7 @@ export default function App() {
 
   if (Platform.OS === 'web') {
     return (
-      <View style={styles.root}>
+      <View style={styles.webRoot}>
         <StatusBar barStyle="light-content" />
         <BrandedBackground onReady={hideNativeSplash}>
           <Image source={LOGO} style={styles.logo} resizeMode="contain" />
@@ -201,6 +201,13 @@ export default function App() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#ffffff' },
+  webRoot: {
+    flex: 1,
+    width: '100vw',
+    minHeight: '100vh',
+    alignSelf: 'stretch',
+    backgroundColor: '#ffffff',
+  },
   fill: { flex: 1 },
   webview: { flex: 1, backgroundColor: '#ffffff' },
   overlay: { ...StyleSheet.absoluteFillObject },
