@@ -21,7 +21,7 @@ const TARGET_URL = 'https://ifisantacruz.com/';
 const APP_NAME = 'IFI Santa Cruz';
 const TAGLINE = 'Katedral ng Birhen Maria Maulawin';
 
-const MIN_LOADING_MS = 1000; // pinakamaikling oras na makikita ang loading screen
+const MIN_LOADING_MS = 1800; // panatilihing nakikita ang branded loading screen nang hindi bababa sa 1.8 segundo
 const FADE_MS = 350;
 const TIMEOUT_MS = 20000; // kapag lumampas, ituturing na error
 const SITE_HOST = /^https?:\/\/([^/]+\.)?ifisantacruz\.com/i;
@@ -210,7 +210,12 @@ const styles = StyleSheet.create({
   },
   fill: { flex: 1 },
   webview: { flex: 1, backgroundColor: '#ffffff' },
-  overlay: { ...StyleSheet.absoluteFillObject },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 10,
+    elevation: 10,
+    backgroundColor: '#14234a',
+  },
   tint: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(14,28,66,0.40)' },
   centerContent: {
     flex: 1,
